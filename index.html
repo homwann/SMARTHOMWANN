@@ -16,8 +16,9 @@
   .logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--teal));display:grid;place-items:center;font-size:30px;box-shadow:var(--shadow)}
   h1{font-size:34px;background:linear-gradient(135deg,var(--green-d),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
   .tag{text-align:center;color:var(--muted);font-size:15px;margin-bottom:34px}
-  .cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-  @media(max-width:680px){.cards{grid-template-columns:1fr}}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media(max-width:780px){.cards{grid-template-columns:1fr}}
+  .b-amber{background:linear-gradient(135deg,#f59e0b,#d97706)}
   a.card{display:block;text-decoration:none;color:inherit;background:#fff;border-radius:20px;padding:30px 26px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--line);transition:.2s}
   a.card:hover{transform:translateY(-5px);box-shadow:0 14px 32px rgba(20,80,40,.14)}
   .ic{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-size:40px;margin:0 auto 18px}
@@ -52,6 +53,13 @@
       <h3>Purchase</h3>
       <p>Record deliveries and the 10-sample lab report (smell, flavor, Brix, weights, meat layer).</p>
       <span class="btn b-teal">Open Purchase →</span>
+    </a>
+
+    <a class="card" href="homwann-qc.html">
+      <div class="ic" style="background:linear-gradient(135deg,#fef3c7,#fcd34d)">🔬</div>
+      <h3>Quality Checks</h3>
+      <p>Per-batch (50 L / 2 baskets) Brix, water taste and odor checks for a production run.</p>
+      <span class="btn b-amber">Open Quality Checks →</span>
     </a>
   </div>
 

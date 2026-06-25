@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOMWANN — Coconut Production Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --green:#16a34a; --green-d:#15803d; --green-l:#22c55e;
+    --teal:#0d9488; --amber:#f59e0b; --blue:#2563eb;
+    --ink:#0f2417; --muted:#64748b; --bg:#eef4ee; --card:#fff;
+    --line:#e3ece4; --shadow:0 8px 24px rgba(20,80,40,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#eef4ee,#e6f0ea);color:var(--ink);min-height:100vh}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+  /* top bar */
+  header.top{display:flex;align-items:center;justify-content:space-between;padding:6px 0 22px}
+  .brand{display:flex;align-items:center;gap:12px;cursor:pointer}
+  .logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--teal));display:grid;place-items:center;font-size:24px;box-shadow:var(--shadow)}
+  .brand h1{font-size:26px;background:linear-gradient(135deg,var(--green-d),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:.5px}
+  .brand small{display:block;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:2px}
+  nav{display:flex;gap:6px;background:#fff;padding:6px;border-radius:14px;box-shadow:var(--shadow)}
+  nav button{border:0;background:transparent;padding:9px 16px;border-radius:10px;font-weight:700;color:var(--muted);cursor:pointer;font-size:14px}
+  nav button.active{background:linear-gradient(135deg,var(--green),var(--teal));color:#fff}
+  /* views */
+  .view{display:none;animation:fade .3s}
+  .view.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  /* home hero */
+  .hero{text-align:center;padding:18px 0 30px}
+  .hero h2{font-size:38px;color:var(--green-d)}
+  .hero p{color:var(--muted);margin-top:6px;font-size:16px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media(max-width:880px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:20px;padding:30px 24px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--line);transition:.2s}
+  .card:hover{transform:translateY(-4px)}
+  .ic{width:80px;height:80px;border-radius:50%;display:grid;place-items:center;font-size:36px;margin:0 auto 16px}
+  .card h3{font-size:21px;margin-bottom:4px}
+  .card .sub{color:var(--ink);font-weight:600;font-size:14px;margin-bottom:8px}
+  .card .desc{color:var(--muted);font-size:13px;min-height:40px;margin-bottom:18px}
+  .card button{width:100%;border:0;color:#fff;padding:13px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}
+  .b-green{background:linear-gradient(135deg,var(--green),var(--green-d))}
+  .b-teal{background:linear-gradient(135deg,var(--teal),#0891b2)}
+  .b-blue{background:linear-gradient(135deg,var(--blue),#1e40af)}
+  .b-amber{background:linear-gradient(135deg,var(--amber),#d97706)}
+  .b-grey{background:linear-gradient(135deg,#94a3b8,#64748b)}
+  .lock{opacity:.85}
+  /* section heading */
+  .shead{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
+  .shead h2{font-size:26px;color:var(--green-d)}
+  .shead p{color:var(--muted);font-size:13px}
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+  @media(max-width:880px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:#fff;border-radius:16px;padding:20px;box-shadow:var(--shadow);border-left:5px solid var(--green)}
+  .kpi .t{color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .kpi .v{font-size:30px;font-weight:800;margin-top:6px}
+  .kpi .u{font-size:13px;color:var(--muted);font-weight:600}
+  .kpi.teal{border-color:var(--teal)} .kpi.amber{border-color:var(--amber)} .kpi.blue{border-color:var(--blue)}
+  .charts{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:22px}
+  @media(max-width:880px){.charts{grid-template-columns:1fr}}
+  .panel{background:#fff;border-radius:16px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--line)}
+  .panel h4{font-size:15px;margin-bottom:14px;color:var(--ink)}
+  /* tabs for production */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tabs button{border:1px solid var(--line);background:#fff;padding:10px 18px;border-radius:12px;font-weight:700;color:var(--muted);cursor:pointer}
+  .tabs button.active{background:var(--green);color:#fff;border-color:var(--green)}
+  /* forms */
+  .formcard{background:#fff;border-radius:16px;padding:24px;box-shadow:var(--shadow);border:1px solid var(--line);max-width:640px}
+  .formcard h4{margin-bottom:4px;font-size:18px}
+  .formcard .hint{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+  label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--ink)}
+  input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fbfdfb}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--green-l);border-color:var(--green-l)}
+  .full{grid-column:1/-1}
+  .save{margin-top:18px;background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff;border:0;padding:13px 22px;border-radius:12px;font-weight:800;cursor:pointer;font-size:15px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:#fff;padding:13px 24px;border-radius:12px;font-weight:700;box-shadow:var(--shadow);opacity:0;transition:.35s;z-index:99}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  /* table */
+  .tablewrap{background:#fff;border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);overflow:auto;margin-top:22px}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+  th{background:#f0f7f1;text-align:left;padding:12px;font-weight:800;color:var(--green-d);white-space:nowrap}
+  td{padding:11px 12px;border-top:1px solid var(--line)}
+  tr:hover td{background:#f8fbf8}
+  .pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800}
+  .pill.water{background:#cffafe;color:#0e7490} .pill.meat{background:#fef3c7;color:#92400e}
+  .empty{padding:30px;text-align:center;color:var(--muted)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .btn-out{border:1px solid var(--green);background:#fff;color:var(--green-d);padding:9px 16px;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px}
+  .btn-out.danger{border-color:#ef4444;color:#ef4444}
+  .del{color:#ef4444;cursor:pointer;font-weight:800;border:0;background:none;font-size:15px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
+  .drivebar{background:#ecfdf5;border:1px dashed var(--green);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--green-d);margin-bottom:20px;display:flex;gap:10px;align-items:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand" onclick="go('home')">
+      <div class="logo">🥥</div>
+      <div><h1>HOMWANN</h1><small>COCONUT PRODUCTION</small></div>
+    </div>
+    <nav>
+      <button id="n-home" class="active" onclick="go('home')">Home</button>
+      <button id="n-dash" onclick="go('dash')">Dashboard</button>
+      <button id="n-prod" onclick="go('prod')">Production Data</button>
+    </nav>
+  </header>
+
+  <!-- HOME -->
+  <section id="home" class="view show">
+    <div class="hero">
+      <h2>HOMWANN Operations Platform</h2>
+      <p>Plant · Produce · Sell — coconut water & coconut meat, all in one place</p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="ic" style="background:linear-gradient(135deg,#dcfce7,#86efac)">🌱</div>
+        <h3>Production Data</h3>
+        <div class="sub">Plant → Produce → Sell</div>
+        <div class="desc">Log planting, harvest, processing output and sales records.</div>
+        <button class="b-green" onclick="go('prod')">Open</button>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:linear-gradient(135deg,#cffafe,#67e8f9)">📊</div>
+        <h3>Dashboard</h3>
+        <div class="sub">Live Overview</div>
+        <div class="desc">Key metrics and charts across the whole operation.</div>
+        <button class="b-teal" onclick="go('dash')">View</button>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:linear-gradient(135deg,#e0e7ff,#a5b4fc)">🚚</div>
+        <h3>Inventory & Logistics</h3>
+        <div class="sub">Coming soon</div>
+        <div class="desc">Stock levels, shipments and cold-chain tracking.</div>
+        <button class="b-grey lock" onclick="soon()">🔒 Soon</button>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:linear-gradient(135deg,#fef3c7,#fcd34d)">🧾</div>
+        <h3>Invoices & Sales</h3>
+        <div class="sub">Coming soon</div>
+        <div class="desc">Customer orders, invoices and payment tracking.</div>
+        <button class="b-grey lock" onclick="soon()">🔒 Soon</button>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:linear-gradient(135deg,#ede9fe,#c4b5fd)">🤖</div>
+        <h3>HOMWANN AI</h3>
+        <div class="sub">Coming soon</div>
+        <div class="desc">Ask anything about yields, output and sales in plain English.</div>
+        <button class="b-grey lock" onclick="soon()">🔒 Soon</button>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:linear-gradient(135deg,#dbeafe,#93c5fd)">☁️</div>
+        <h3>Google Drive Sync</h3>
+        <div class="sub">Ready to connect</div>
+        <div class="desc">Export all records to Google Sheets / Drive in one click.</div>
+        <button class="b-blue" onclick="go('prod')">Export</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dash" class="view">
+    <div class="shead">
+      <div><h2>📊 Dashboard</h2><p>Snapshot of HOMWANN production & sales</p></div>
+      <button class="btn-out" onclick="seedDemo()">+ Load sample data</button>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="t">Trees Planted</div><div class="v" id="k-trees">0</div><div class="u">total trees</div></div>
+      <div class="kpi teal"><div class="t">Nuts Harvested</div><div class="v" id="k-nuts">0</div><div class="u">coconuts</div></div>
+      <div class="kpi blue"><div class="t">Coconut Water</div><div class="v" id="k-water">0</div><div class="u">litres produced</div></div>
+      <div class="kpi amber"><div class="t">Coconut Meat</div><div class="v" id="k-meat">0</div><div class="u">kg produced</div></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="t">Total Sales</div><div class="v" id="k-sales">฿0</div><div class="u">revenue</div></div>
+      <div class="kpi teal"><div class="t">Units Sold</div><div class="v" id="k-units">0</div><div class="u">items</div></div>
+      <div class="kpi blue"><div class="t">Avg Yield / Tree</div><div class="v" id="k-yield">0</div><div class="u">nuts / tree</div></div>
+      <div class="kpi amber"><div class="t">Records Logged</div><div class="v" id="k-recs">0</div><div class="u">entries</div></div>
+    </div>
+    <div class="charts">
+      <div class="panel"><h4>Monthly Production Output</h4><canvas id="chartProd" height="150"></canvas></div>
+      <div class="panel"><h4>Product Split (by output)</h4><canvas id="chartSplit" height="150"></canvas></div>
+    </div>
+    <div class="panel"><h4>Sales Revenue Over Time</h4><canvas id="chartSales" height="90"></canvas></div>
+  </section>
+
+  <!-- PRODUCTION DATA -->
+  <section id="prod" class="view">
+    <div class="shead">
+      <div><h2>🌱 Production Data</h2><p>Record every stage from field to sale</p></div>
+    </div>
+    <div class="drivebar">☁️ <span>Records are saved on this device. Use <b>Export to Drive (CSV)</b> below to push them into Google Sheets / Drive.</span></div>
+    <div class="tabs">
+      <button id="t-plant" class="active" onclick="tab('plant')">🌴 Planting</button>
+      <button id="t-harvest" onclick="tab('harvest')">🥥 Harvest</button>
+      <button id="t-process" onclick="tab('process')">🏭 Processing</button>
+      <button id="t-sale" onclick="tab('sale')">💰 Sales</button>
+    </div>
+
+    <!-- planting -->
+    <div id="f-plant" class="formcard tabview">
+      <h4>Planting Log</h4><div class="hint">Record new coconut planting batches.</div>
+      <div class="grid2">
+        <div><label>Date</label><input type="date" id="p-date"></div>
+        <div><label>Plot / Field</label><input id="p-plot" placeholder="e.g. Field A-3"></div>
+        <div><label>Variety</label><select id="p-var"><option>Nam Hom (Aromatic)</option><option>Tall</option><option>Dwarf</option><option>Hybrid</option></select></div>
+        <div><label>Trees Planted</label><input type="number" id="p-trees" min="0" placeholder="0"></div>
+        <div class="full"><label>Notes</label><textarea id="p-notes" rows="2" placeholder="Soil, spacing, etc."></textarea></div>
+      </div>
+      <button class="save" onclick="addPlant()">Save Planting Record</button>
+    </div>
+
+    <!-- harvest -->
+    <div id="f-harvest" class="formcard tabview" style="display:none">
+      <h4>Harvest Log</h4><div class="hint">Record coconuts harvested per batch.</div>
+      <div class="grid2">
+        <div><label>Date</label><input type="date" id="h-date"></div>
+        <div><label>Plot / Field</label><input id="h-plot" placeholder="e.g. Field A-3"></div>
+        <div><label>Coconuts Harvested</label><input type="number" id="h-nuts" min="0" placeholder="0"></div>
+        <div><label>Avg Weight (kg/nut)</label><input type="number" step="0.1" id="h-wt" placeholder="1.5"></div>
+        <div><label>Quality Grade</label><select id="h-grade"><option>A</option><option>B</option><option>C</option></select></div>
+        <div><label>Harvested By</label><input id="h-by" placeholder="Team / person"></div>
+      </div>
+      <button class="save" onclick="addHarvest()">Save Harvest Record</button>
+    </div>
+
+    <!-- processing -->
+    <div id="f-process" class="formcard tabview" style="display:none">
+      <h4>Processing Output</h4><div class="hint">Record coconut water & meat produced from a batch.</div>
+      <div class="grid2">
+        <div><label>Date</label><input type="date" id="r-date"></div>
+        <div><label>Product</label><select id="r-prod" onchange="unitHint()"><option value="water">Coconut Water</option><option value="meat">Coconut Meat</option></select></div>
+        <div><label>Nuts Used</label><input type="number" id="r-nuts" min="0" placeholder="0"></div>
+        <div><label>Output Qty <span id="r-unit" style="color:var(--muted)">(litres)</span></label><input type="number" step="0.1" id="r-qty" placeholder="0"></div>
+        <div><label>Batch / Lot No.</label><input id="r-lot" placeholder="e.g. W-2406-01"></div>
+        <div><label>Operator</label><input id="r-op" placeholder="Operator name"></div>
+      </div>
+      <button class="save" onclick="addProcess()">Save Processing Record</button>
+    </div>
+
+    <!-- sales -->
+    <div id="f-sale" class="formcard tabview" style="display:none">
+      <h4>Sales Record</h4><div class="hint">Record a sale of coconut water or meat.</div>
+      <div class="grid2">
+        <div><label>Date</label><input type="date" id="s-date"></div>
+        <div><label>Customer</label><input id="s-cust" placeholder="Customer / channel"></div>
+        <div><label>Product</label><select id="s-prod"><option value="water">Coconut Water</option><option value="meat">Coconut Meat</option></select></div>
+        <div><label>Quantity (units)</label><input type="number" id="s-qty" min="0" placeholder="0"></div>
+        <div><label>Unit Price (฿)</label><input type="number" step="0.01" id="s-price" placeholder="0.00"></div>
+        <div><label>Channel</label><select id="s-chan"><option>Wholesale</option><option>Retail</option><option>Export</option><option>Online</option></select></div>
+      </div>
+      <button class="save" onclick="addSale()">Save Sale Record</button>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn-out" onclick="exportCSV()">⬇ Export to Drive (CSV)</button>
+      <button class="btn-out" onclick="go('dash')">📊 View Dashboard</button>
+      <button class="btn-out danger" onclick="clearAll()">🗑 Clear all data</button>
+    </div>
+
+    <div class="tablewrap">
+      <table id="recTable">
+        <thead><tr><th>Date</th><th>Type</th><th>Detail</th><th>Qty</th><th>Value</th><th></th></tr></thead>
+        <tbody id="recBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>HOMWANN Coconut Production Platform · prototype · data stored locally in your browser</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- storage ----------
+const KEY='homwann_v1';
+let DB=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{plant:[],harvest:[],process:[],sale:[]}}catch(e){return{plant:[],harvest:[],process:[],sale:[]}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB));render();}
+function today(){return new Date().toISOString().slice(0,10);}
+function uid(){return Date.now()+''+Math.floor(Math.random()*999);}
+
+// ---------- nav ----------
+function go(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));
+  document.getElementById(v).classList.add('show');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  ({home:'n-home',dash:'n-dash',prod:'n-prod'})[v]&&document.getElementById(({home:'n-home',dash:'n-dash',prod:'n-prod'})[v]).classList.add('active');
+  if(v==='dash')drawCharts();
+  window.scrollTo(0,0);
+}
+function tab(t){
+  document.querySelectorAll('.tabview').forEach(e=>e.style.display='none');
+  document.getElementById('f-'+t).style.display='block';
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t-'+t).classList.add('active');
+}
+function soon(){toast('That module is coming soon 🚧');}
+function unitHint(){document.getElementById('r-unit').textContent = document.getElementById('r-prod').value==='water'?'(litres)':'(kg)';}
+
+// ---------- toast ----------
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ---------- add records ----------
+function val(id){return document.getElementById(id).value;}
+function addPlant(){
+  if(!val('p-trees')){return toast('Enter number of trees');}
+  DB.plant.push({id:uid(),date:val('p-date')||today(),plot:val('p-plot'),variety:val('p-var'),trees:+val('p-trees'),notes:val('p-notes')});
+  save();toast('✅ Planting saved');['p-plot','p-trees','p-notes'].forEach(i=>document.getElementById(i).value='');
+}
+function addHarvest(){
+  if(!val('h-nuts')){return toast('Enter coconuts harvested');}
+  DB.harvest.push({id:uid(),date:val('h-date')||today(),plot:val('h-plot'),nuts:+val('h-nuts'),wt:+val('h-wt')||0,grade:val('h-grade'),by:val('h-by')});
+  save();toast('✅ Harvest saved');['h-plot','h-nuts','h-wt','h-by'].forEach(i=>document.getElementById(i).value='');
+}
+function addProcess(){
+  if(!val('r-qty')){return toast('Enter output quantity');}
+  DB.process.push({id:uid(),date:val('r-date')||today(),product:val('r-prod'),nuts:+val('r-nuts')||0,qty:+val('r-qty'),lot:val('r-lot'),op:val('r-op')});
+  save();toast('✅ Processing saved');['r-nuts','r-qty','r-lot','r-op'].forEach(i=>document.getElementById(i).value='');
+}
+function addSale(){
+  if(!val('s-qty')){return toast('Enter quantity');}
+  DB.sale.push({id:uid(),date:val('s-date')||today(),cust:val('s-cust'),product:val('s-prod'),qty:+val('s-qty'),price:+val('s-price')||0,chan:val('s-chan')});
+  save();toast('✅ Sale saved');['s-cust','s-qty','s-price'].forEach(i=>document.getElementById(i).value='');
+}
+function delRec(type,id){DB[type]=DB[type].filter(r=>r.id!==id);save();toast('Deleted');}
+function clearAll(){if(confirm('Delete ALL records on this device?')){DB={plant:[],harvest:[],process:[],sale:[]};save();toast('All data cleared');}}
+
+// ---------- render table ----------
+const baht=n=>'฿'+(n||0).toLocaleString(undefined,{maximumFractionDigits:0});
+function render(){
+  const rows=[];
+  DB.plant.forEach(r=>rows.push({t:'plant',date:r.date,type:'🌴 Planting',detail:(r.plot||'-')+' · '+r.variety,qty:r.trees+' trees',val:'—',id:r.id}));
+  DB.harvest.forEach(r=>rows.push({t:'harvest',date:r.date,type:'🥥 Harvest',detail:(r.plot||'-')+' · Grade '+r.grade,qty:r.nuts+' nuts',val:'—',id:r.id}));
+  DB.process.forEach(r=>{const u=r.product==='water'?'L':'kg';const p=r.product==='water'?'<span class="pill water">Water</span>':'<span class="pill meat">Meat</span>';rows.push({t:'process',date:r.date,type:'🏭 Processing',detail:p+' '+(r.lot||''),qty:r.qty+' '+u,val:'—',id:r.id});});
+  DB.sale.forEach(r=>{const p=r.product==='water'?'<span class="pill water">Water</span>':'<span class="pill meat">Meat</span>';rows.push({t:'sale',date:r.date,type:'💰 Sale',detail:p+' '+(r.cust||'')+' · '+r.chan,qty:r.qty+' units',val:baht(r.qty*r.price),id:r.id});});
+  rows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const body=document.getElementById('recBody');
+  if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No records yet. Add one above or load sample data on the Dashboard.</td></tr>';return;}
+  body.innerHTML=rows.map(r=>`<tr><td>${r.date}</td><td>${r.type}</td><td>${r.detail}</td><td>${r.qty}</td><td>${r.val}</td><td><button class="del" onclick="delRec('${r.t}','${r.id}')">×</button></td></tr>`).join('');
+}
+
+// ---------- dashboard ----------
+function totals(){
+  const trees=DB.plant.reduce((s,r)=>s+r.trees,0);
+  const nuts=DB.harvest.reduce((s,r)=>s+r.nuts,0);
+  const water=DB.process.filter(r=>r.product==='water').reduce((s,r)=>s+r.qty,0);
+  const meat=DB.process.filter(r=>r.product==='meat').reduce((s,r)=>s+r.qty,0);
+  const sales=DB.sale.reduce((s,r)=>s+r.qty*r.price,0);
+  const units=DB.sale.reduce((s,r)=>s+r.qty,0);
+  const recs=DB.plant.length+DB.harvest.length+DB.process.length+DB.sale.length;
+  const yld=trees?Math.round(nuts/trees*10)/10:0;
+  return{trees,nuts,water,meat,sales,units,recs,yld};
+}
+function ym(d){return (d||'').slice(0,7);}
+function refreshKPIs(){
+  const t=totals();
+  k('k-trees',t.trees.toLocaleString());k('k-nuts',t.nuts.toLocaleString());
+  k('k-water',t.water.toLocaleString());k('k-meat',t.meat.toLocaleString());
+  k('k-sales',baht(t.sales));k('k-units',t.units.toLocaleString());
+  k('k-yield',t.yld);k('k-recs',t.recs);
+}
+function k(id,v){document.getElementById(id).textContent=v;}
+
+let c1,c2,c3;
+function drawCharts(){
+  refreshKPIs();
+  // monthly production
+  const months=[...new Set(DB.process.map(r=>ym(r.date)))].sort();
+  const water=months.map(m=>DB.process.filter(r=>ym(r.date)===m&&r.product==='water').reduce((s,r)=>s+r.qty,0));
+  const meat=months.map(m=>DB.process.filter(r=>ym(r.date)===m&&r.product==='meat').reduce((s,r)=>s+r.qty,0));
+  const sMonths=[...new Set(DB.sale.map(r=>ym(r.date)))].sort();
+  const rev=sMonths.map(m=>DB.sale.filter(r=>ym(r.date)===m).reduce((s,r)=>s+r.qty*r.price,0));
+  const t=totals();
+  c1&&c1.destroy();c2&&c2.destroy();c3&&c3.destroy();
+  const grn='#16a34a',tl='#0d9488',am='#f59e0b';
+  c1=new Chart(document.getElementById('chartProd'),{type:'bar',data:{labels:months.length?months:['No data'],datasets:[
+    {label:'Water (L)',data:water,backgroundColor:tl,borderRadius:6},
+    {label:'Meat (kg)',data:meat,backgroundColor:am,borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});
+  c2=new Chart(document.getElementById('chartSplit'),{type:'doughnut',data:{labels:['Water (L)','Meat (kg)'],datasets:[{data:[t.water,t.meat],backgroundColor:[tl,am]}]},options:{plugins:{legend:{position:'bottom'}}}});
+  c3=new Chart(document.getElementById('chartSales'),{type:'line',data:{labels:sMonths.length?sMonths:['No data'],datasets:[{label:'Revenue (฿)',data:rev,borderColor:grn,backgroundColor:'rgba(22,163,74,.15)',fill:true,tension:.3}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+}
+
+// ---------- export ----------
+function exportCSV(){
+  let csv='Section,Date,Field1,Field2,Field3,Qty,Value\n';
+  DB.plant.forEach(r=>csv+=`Planting,${r.date},${r.plot||''},${r.variety},${(r.notes||'').replace(/,/g,';')},${r.trees} trees,\n`);
+  DB.harvest.forEach(r=>csv+=`Harvest,${r.date},${r.plot||''},Grade ${r.grade},${r.by||''},${r.nuts} nuts,\n`);
+  DB.process.forEach(r=>csv+=`Processing,${r.date},${r.product},${r.lot||''},${r.op||''},${r.qty} ${r.product==='water'?'L':'kg'},\n`);
+  DB.sale.forEach(r=>csv+=`Sale,${r.date},${r.cust||''},${r.product},${r.chan},${r.qty} units,${r.qty*r.price}\n`);
+  const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='homwann_production_'+today()+'.csv';a.click();
+  toast('⬇ CSV downloaded — upload to Google Drive / import to Sheets');
+}
+
+// ---------- demo data ----------
+function seedDemo(){
+  if(DB.plant.length&&!confirm('Add sample data on top of existing records?'))return;
+  const m=['2026-01','2026-02','2026-03','2026-04','2026-05'];
+  DB.plant.push({id:uid(),date:'2026-01-12',plot:'Field A-1',variety:'Nam Hom (Aromatic)',trees:320,notes:'New aromatic plot'});
+  DB.plant.push({id:uid(),date:'2026-02-08',plot:'Field B-2',variety:'Hybrid',trees:180,notes:''});
+  m.forEach((mo,i)=>{
+    DB.harvest.push({id:uid(),date:mo+'-15',plot:'Field A-1',nuts:1200+i*250,wt:1.5,grade:'A',by:'Team 1'});
+    DB.process.push({id:uid(),date:mo+'-16',product:'water',nuts:800+i*150,qty:1600+i*300,lot:'W-'+mo,op:'Som'});
+    DB.process.push({id:uid(),date:mo+'-17',product:'meat',nuts:400+i*100,qty:520+i*90,lot:'M-'+mo,op:'Lek'});
+    DB.sale.push({id:uid(),date:mo+'-20',cust:'BigC',product:'water',qty:1400+i*250,price:18,chan:'Wholesale'});
+    DB.sale.push({id:uid(),date:mo+'-22',cust:'Export Co',product:'meat',qty:450+i*70,price:65,chan:'Export'});
+  });
+  save();drawCharts();toast('✅ Sample data loaded');
+}
+
+// init
+document.getElementById('p-date').value=today();
+['h-date','r-date','s-date'].forEach(i=>document.getElementById(i).value=today());
+render();
+</script>
+</body>
+</html>

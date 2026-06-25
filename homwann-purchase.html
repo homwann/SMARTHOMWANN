@@ -75,7 +75,10 @@
       <div class="logo">🥥</div>
       <div><h1>HOMWANN</h1><small>PURCHASE &amp; LAB REPORT</small></div>
     </div>
-    <button class="gear" onclick="openCfg()">⚙ Settings</button>
+    <div style="display:flex;gap:8px">
+      <a class="gear" href="index.html" style="text-decoration:none">🏠 Home</a>
+      <button class="gear" onclick="openCfg()">⚙ Settings</button>
+    </div>
   </header>
 
   <div id="status" class="status off"><span class="dot"></span><span id="statusTxt"></span></div>
@@ -154,10 +157,12 @@
 <script>
 const SHEET_URL="https://docs.google.com/spreadsheets/d/1OVe6ECDRn8qL2ntbSWs6QiqGHQhdeaKt7GqzS-_Y8MI/edit";
 const CFG_KEY="homwann_cfg", DATA_KEY="homwann_purchase";
+const DEFAULT_URL="https://script.google.com/macros/s/AKfycbwESFOof9WyhNa-mzx3rCLL4Y9IiVaESxYH3zmpdKmassY2rvDBDylmsUTqHXSW-fcp/exec";
 let CFG=JSON.parse(localStorage.getItem(CFG_KEY)||"{}");
+if(!CFG.url){CFG.url=DEFAULT_URL;localStorage.setItem(CFG_KEY,JSON.stringify(CFG));}
 let ROWS=JSON.parse(localStorage.getItem(DATA_KEY)||"[]");
 const SMELL=["","Aromatic","A little aromatic","No aromatic","Old coconut"];
-const FLAVOR=["","less Sweet","Less sweet sparkling","Very sweet","Sweet","Slight sour","Sour","No taste"];
+const FLAVOR=["","Very sweet","Sweet","Slight sour","Sour","No taste"];
 const LAYER=["","1.0","1.5","1.8","2.0","More than 2.0"];
 const today=()=>new Date().toISOString().slice(0,10);
 const uid=()=>Date.now()+''+Math.floor(Math.random()*999);
