@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOMWANN — Purchase & Lab Report</title>
+<style>
+  :root{
+    --green:#16a34a;--green-d:#15803d;--teal:#0d9488;--amber:#f59e0b;--blue:#2563eb;
+    --ink:#0f2417;--muted:#64748b;--line:#e3ece4;--shadow:0 8px 24px rgba(20,80,40,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#eef4ee,#e6f0ea);color:var(--ink);min-height:100vh}
+  .wrap{max-width:980px;margin:0 auto;padding:24px}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--teal));display:grid;place-items:center;font-size:24px;box-shadow:var(--shadow)}
+  .brand h1{font-size:24px;background:linear-gradient(135deg,var(--green-d),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand small{display:block;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:2px}
+  .gear{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font-size:14px;font-weight:700;color:var(--muted)}
+  .status{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:10px 14px;border-radius:12px;margin-bottom:18px}
+  .status.ok{background:#ecfdf5;color:var(--green-d);border:1px solid #a7f3d0}
+  .status.off{background:#fff7ed;color:#b45309;border:1px solid #fed7aa}
+  .dot{width:9px;height:9px;border-radius:50%;background:currentColor}
+  .status a{color:inherit;font-weight:800}
+  .card{background:#fff;border-radius:18px;padding:24px;box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px}
+  .card h2{font-size:19px;margin-bottom:2px}
+  .card .step{display:inline-block;background:var(--green);color:#fff;font-size:12px;font-weight:800;padding:2px 9px;border-radius:20px;margin-right:8px}
+  .card .hint{color:var(--muted);font-size:13px;margin:4px 0 18px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:720px){.grid3{grid-template-columns:1fr 1fr}}
+  @media(max-width:480px){.grid3{grid-template-columns:1fr}}
+  label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fbfdfb}
+  input:focus,select:focus{outline:2px solid var(--green);border-color:var(--green)}
+  /* lab grid */
+  .labwrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+  table.lab{width:100%;border-collapse:collapse;min-width:760px}
+  table.lab th{background:#f0f7f1;color:var(--green-d);font-size:12px;font-weight:800;padding:9px;text-align:left;white-space:nowrap;position:sticky;top:0}
+  table.lab td{padding:5px;border-top:1px solid var(--line)}
+  table.lab td.no{text-align:center;font-weight:800;color:var(--muted);width:34px}
+  table.lab input,table.lab select{padding:8px;border-radius:8px;font-size:13px}
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+  @media(max-width:560px){.summary{grid-template-columns:repeat(2,1fr)}}
+  .sb{background:#f0f7f1;border-radius:12px;padding:14px;text-align:center}
+  .sb .t{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .sb .v{font-size:24px;font-weight:800;margin-top:3px;color:var(--green-d)}
+  .sb .u{font-size:11px;color:var(--muted)}
+  .save{width:100%;background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff;border:0;padding:15px;border-radius:13px;font-weight:800;cursor:pointer;font-size:16px}
+  .save:disabled{opacity:.6;cursor:wait}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .btn-out{border:1px solid var(--green);background:#fff;color:var(--green-d);padding:9px 16px;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px}
+  .tablewrap{overflow:auto}
+  table.recent{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+  table.recent th{background:#f0f7f1;text-align:left;padding:11px;font-weight:800;color:var(--green-d);white-space:nowrap}
+  table.recent td{padding:10px 11px;border-top:1px solid var(--line)}
+  .sync{font-size:11px;font-weight:800}.sync.y{color:var(--green)}.sync.n{color:#b45309}
+  .empty{padding:24px;text-align:center;color:var(--muted)}
+  .modal{position:fixed;inset:0;background:rgba(15,36,23,.5);display:none;place-items:center;padding:20px;z-index:50}
+  .modal.show{display:grid}
+  .mbox{background:#fff;border-radius:18px;padding:26px;max-width:480px;width:100%;box-shadow:var(--shadow)}
+  .mbox h3{margin-bottom:6px}.mbox p{color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.5}
+  .mbox .row{display:flex;gap:10px;margin-top:16px}
+  .mbox button{flex:1;padding:12px;border-radius:11px;font-weight:800;cursor:pointer;border:0}
+  .mbox .primary{background:var(--green);color:#fff}.mbox .ghost{background:#f1f5f4;color:var(--ink)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:#fff;padding:13px 24px;border-radius:12px;font-weight:700;box-shadow:var(--shadow);opacity:0;transition:.35s;z-index:99}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">🥥</div>
+      <div><h1>HOMWANN</h1><small>PURCHASE &amp; LAB REPORT</small></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a class="gear" href="index.html" style="text-decoration:none">🏠 Home</a>
+      <button class="gear" onclick="openCfg()">⚙ Settings</button>
+    </div>
+  </header>
+
+  <div id="status" class="status off"><span class="dot"></span><span id="statusTxt"></span></div>
+
+  <!-- delivery -->
+  <div class="card">
+    <h2><span class="step">1</span>Delivery Details</h2>
+    <div class="hint">Recorded by the purchasing team for each incoming delivery.</div>
+    <div class="grid3">
+      <div><label>Supplier Name</label><input id="p-sup" placeholder="Supplier"></div>
+      <div><label>Delivery Date</label><input type="date" id="p-date"></div>
+      <div><label>Quantity</label><input id="p-qty" placeholder="e.g. 5,000 nuts"></div>
+      <div><label>Size</label><select id="p-size"><option>Small</option><option selected>Medium</option><option>Large</option><option>Jumbo</option><option>Mixed</option></select></div>
+      <div><label>Taste (overall)</label><select id="p-taste">
+        <option>Aromatic</option><option>A little aromatic</option><option>No aromatic</option><option>Old coconut</option></select></div>
+      <div><label>Recorded By</label><input id="p-by" placeholder="Your name"></div>
+    </div>
+  </div>
+
+  <!-- lab report -->
+  <div class="card">
+    <h2><span class="step">2</span>Lab Report — 10 Samples</h2>
+    <div class="hint">Measure each sample. Averages update automatically.</div>
+    <div class="labwrap">
+      <table class="lab">
+        <thead><tr>
+          <th>#</th><th>Smell</th><th>Flavor</th><th>% Brix</th><th>Weight (kg)</th><th>Water (ml)</th><th>Meat (kg)</th><th>Meat Layer</th>
+        </tr></thead>
+        <tbody id="labBody"></tbody>
+      </table>
+    </div>
+    <div class="summary">
+      <div class="sb"><div class="t">Samples Filled</div><div class="v" id="s-count">0</div><div class="u">/ 10</div></div>
+      <div class="sb"><div class="t">Avg Weight</div><div class="v" id="s-wt">0</div><div class="u">kg / nut</div></div>
+      <div class="sb"><div class="t">Avg Water</div><div class="v" id="s-water">0</div><div class="u">ml / nut</div></div>
+      <div class="sb"><div class="t">Avg Meat</div><div class="v" id="s-meat">0</div><div class="u">kg / nut</div></div>
+      <div class="sb"><div class="t">Avg % Brix</div><div class="v" id="s-brix">0</div><div class="u">°Bx</div></div>
+      <div class="sb"><div class="t">Common Meat Layer</div><div class="v" id="s-layer" style="font-size:18px">—</div><div class="u">mode</div></div>
+    </div>
+  </div>
+
+  <button class="save" id="saveBtn" onclick="submit()">Save Delivery + Lab Report to Drive</button>
+
+  <div class="toolbar">
+    <button class="btn-out" onclick="openSheet()">📄 Open Google Sheet</button>
+    <button class="btn-out" onclick="retryAll()">🔄 Retry unsynced</button>
+    <button class="btn-out" onclick="exportCSV()">⬇ Export CSV</button>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h2>Recent Deliveries (this device)</h2>
+    <div class="hint">Latest purchase records logged here.</div>
+    <div class="tablewrap">
+      <table class="recent">
+        <thead><tr><th>Date</th><th>Supplier</th><th>Qty</th><th>Size</th><th>Taste</th><th>Avg Wt</th><th>Avg Water</th><th>Avg Meat</th><th>Avg Bx</th><th>Synced</th></tr></thead>
+        <tbody id="recBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>HOMWANN Purchase &amp; Lab Report · syncs to your Google Drive workbook (Purchase + Lab Report tabs)</footer>
+</div>
+
+<!-- settings -->
+<div class="modal" id="cfg">
+  <div class="mbox">
+    <h3>⚙ Google Drive Connection</h3>
+    <p>Paste the <b>Web App URL</b> from the HOMWANN connector deployment (see setup guide). Same URL used by the Production app.</p>
+    <label>Web App URL</label>
+    <input id="cfg-url" placeholder="https://script.google.com/macros/s/..../exec">
+    <div class="row"><button class="ghost" onclick="closeCfg()">Cancel</button><button class="primary" onclick="saveCfg()">Save</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SHEET_URL="https://docs.google.com/spreadsheets/d/1OVe6ECDRn8qL2ntbSWs6QiqGHQhdeaKt7GqzS-_Y8MI/edit";
+const CFG_KEY="homwann_cfg", DATA_KEY="homwann_purchase";
+const DEFAULT_URL="https://script.google.com/macros/s/AKfycbwESFOof9WyhNa-mzx3rCLL4Y9IiVaESxYH3zmpdKmassY2rvDBDylmsUTqHXSW-fcp/exec";
+let CFG=JSON.parse(localStorage.getItem(CFG_KEY)||"{}");
+if(!CFG.url){CFG.url=DEFAULT_URL;localStorage.setItem(CFG_KEY,JSON.stringify(CFG));}
+let ROWS=JSON.parse(localStorage.getItem(DATA_KEY)||"[]");
+const SMELL=["","Aromatic","A little aromatic","No aromatic","Old coconut"];
+const FLAVOR=["","Very sweet","Sweet","Slight sour","Sour","No taste"];
+const LAYER=["","1.0","1.5","1.8","2.0","More than 2.0"];
+const today=()=>new Date().toISOString().slice(0,10);
+const uid=()=>Date.now()+''+Math.floor(Math.random()*999);
+
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2400);}
+
+// build 10 sample rows
+function opt(arr){return arr.map(v=>`<option value="${v}">${v||'—'}</option>`).join('');}
+function buildLab(){
+  let h='';
+  for(let i=1;i<=10;i++){
+    h+=`<tr>
+      <td class="no">${i}</td>
+      <td><select class="x-smell">${opt(SMELL)}</select></td>
+      <td><select class="x-flavor">${opt(FLAVOR)}</select></td>
+      <td><input type="number" step="0.1" min="7" value="7" class="x-brix" oninput="calc()"></td>
+      <td><input type="number" step="0.01" class="x-wt" oninput="calc()"></td>
+      <td><input type="number" step="1" class="x-water" oninput="calc()"></td>
+      <td><input type="number" step="0.01" class="x-meat" oninput="calc()"></td>
+      <td><select class="x-layer">${opt(LAYER)}</select></td>
+    </tr>`;
+  }
+  document.getElementById('labBody').innerHTML=h;
+}
+function samples(){
+  const tr=[...document.querySelectorAll('#labBody tr')];
+  return tr.map((r,i)=>({
+    n:i+1,
+    smell:r.querySelector('.x-smell').value,
+    flavor:r.querySelector('.x-flavor').value,
+    brix:r.querySelector('.x-brix').value,
+    wt:r.querySelector('.x-wt').value,
+    water:r.querySelector('.x-water').value,
+    meat:r.querySelector('.x-meat').value,
+    layer:r.querySelector('.x-layer').value
+  }));
+}
+function calc(){
+  const s=samples();
+  // a sample counts as "filled" only if something other than the default Brix was entered
+  const filledRows=s.filter(x=>x.wt||x.water||x.meat||x.smell||x.flavor||x.layer);
+  const filled=filledRows.length;
+  const wts=filledRows.map(x=>+x.wt).filter(v=>v>0);
+  const wat=filledRows.map(x=>+x.water).filter(v=>v>0);
+  const met=filledRows.map(x=>+x.meat).filter(v=>v>0);
+  const brx=filledRows.map(x=>+x.brix).filter(v=>v>0);
+  const avg=(a,d)=>{if(!a.length)return 0;const f=Math.pow(10,d);return Math.round(a.reduce((p,c)=>p+c,0)/a.length*f)/f;};
+  const avgWt=avg(wts,2), avgWater=avg(wat,0), avgMeat=avg(met,2), avgBrix=avg(brx,1);
+  document.getElementById('s-count').textContent=filled;
+  document.getElementById('s-wt').textContent=avgWt;
+  document.getElementById('s-water').textContent=avgWater;
+  document.getElementById('s-meat').textContent=avgMeat;
+  document.getElementById('s-brix').textContent=avgBrix;
+  // mode of layer
+  const layers=s.map(x=>x.layer).filter(Boolean);
+  let mode='—';
+  if(layers.length){const c={};layers.forEach(l=>c[l]=(c[l]||0)+1);mode=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];}
+  document.getElementById('s-layer').textContent=mode;
+  return{avgWt,avgWater,avgMeat,avgBrix,mode,filled};
+}
+
+function status(){
+  const el=document.getElementById('status'),tx=document.getElementById('statusTxt');
+  if(CFG.url){el.className='status ok';tx.innerHTML='Connected to Google Drive — entries sync automatically.';}
+  else{el.className='status off';tx.innerHTML='Not connected yet. <a href="#" onclick="openCfg();return false">Add your Web App URL</a> to sync to Drive.';}
+}
+function openCfg(){document.getElementById('cfg-url').value=CFG.url||'';document.getElementById('cfg').classList.add('show');}
+function closeCfg(){document.getElementById('cfg').classList.remove('show');}
+function saveCfg(){CFG.url=document.getElementById('cfg-url').value.trim();localStorage.setItem(CFG_KEY,JSON.stringify(CFG));closeCfg();status();toast('✅ Connection saved');}
+function openSheet(){window.open(SHEET_URL,'_blank');}
+
+async function submit(){
+  const sup=document.getElementById('p-sup').value.trim();
+  if(!sup)return toast('Enter supplier name');
+  const c=calc();
+  if(!c.filled)return toast('Fill at least one lab sample');
+  const rec={
+    id:uid(),type:'purchase',
+    supplier:sup,date:document.getElementById('p-date').value||today(),
+    quantity:document.getElementById('p-qty').value,size:document.getElementById('p-size').value,
+    taste:document.getElementById('p-taste').value,recordedBy:document.getElementById('p-by').value,
+    avgWt:c.avgWt,avgWater:c.avgWater,avgMeat:c.avgMeat,avgBrix:c.avgBrix,commonLayer:c.mode,
+    samples:samples(),synced:false
+  };
+  ROWS.unshift(rec);persist();render();
+  await sync(rec);
+  if(rec.synced){ // reset form for next delivery
+    ['p-sup','p-qty','p-by'].forEach(i=>document.getElementById(i).value='');
+    buildLab();calc();
+  }
+}
+async function sync(rec){
+  if(!CFG.url){toast('💾 Saved locally — connect Drive to sync');return;}
+  const btn=document.getElementById('saveBtn');btn.disabled=true;
+  try{
+    await fetch(CFG.url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(rec)});
+    rec.synced=true;persist();render();toast('✅ Saved to Google Drive');
+  }catch(e){toast('⚠ Saved locally — sync failed, will retry');}
+  btn.disabled=false;
+}
+async function retryAll(){
+  const pend=ROWS.filter(r=>!r.synced);
+  if(!pend.length)return toast('Nothing to retry');
+  if(!CFG.url)return openCfg();
+  for(const r of pend){await sync(r);}
+}
+
+function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(ROWS));}
+function render(){
+  const b=document.getElementById('recBody');
+  if(!ROWS.length){b.innerHTML='<tr><td colspan="10" class="empty">No deliveries yet.</td></tr>';return;}
+  b.innerHTML=ROWS.slice(0,30).map(r=>{
+    const s=r.synced?'<span class="sync y">✓ synced</span>':'<span class="sync n">⏳ local</span>';
+    return `<tr><td>${r.date}</td><td>${r.supplier}</td><td>${r.quantity||'—'}</td><td>${r.size}</td><td>${r.taste}</td><td>${r.avgWt} kg</td><td>${r.avgWater} ml</td><td>${r.avgMeat} kg</td><td>${r.avgBrix}</td><td>${s}</td></tr>`;
+  }).join('');
+}
+function exportCSV(){
+  let csv='Delivery Date,Supplier,Quantity,Size,Taste,Sample No,Smell,Flavor,%Brix,Weight(kg),Water(ml),Meat(kg),Meat Layer,Avg Weight(kg),Avg Water(ml),Avg Meat(kg),Avg Brix\n';
+  ROWS.forEach(r=>r.samples.forEach(s=>{
+    csv+=`${r.date},${r.supplier},${r.quantity||''},${r.size},${r.taste},${s.n},${s.smell},${s.flavor},${s.brix},${s.wt},${s.water},${s.meat},${s.layer},${r.avgWt},${r.avgWater},${r.avgMeat},${r.avgBrix}\n`;
+  }));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='homwann_purchase_'+today()+'.csv';a.click();toast('⬇ CSV downloaded');
+}
+
+// init
+buildLab();
+document.getElementById('p-date').value=today();
+status();render();calc();
+</script>
+</body>
+</html>

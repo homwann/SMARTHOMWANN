@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOMWANN — Quality Checks</title>
+<style>
+  :root{
+    --green:#16a34a;--green-d:#15803d;--teal:#0d9488;--amber:#f59e0b;--blue:#2563eb;
+    --ink:#0f2417;--muted:#64748b;--line:#e3ece4;--shadow:0 8px 24px rgba(20,80,40,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#eef4ee,#e6f0ea);color:var(--ink);min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:24px}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--teal));display:grid;place-items:center;font-size:24px;box-shadow:var(--shadow)}
+  .brand h1{font-size:24px;background:linear-gradient(135deg,var(--green-d),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand small{display:block;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:2px}
+  .gear{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font-size:14px;font-weight:700;color:var(--muted)}
+  .status{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:10px 14px;border-radius:12px;margin-bottom:18px}
+  .status.ok{background:#ecfdf5;color:var(--green-d);border:1px solid #a7f3d0}
+  .status.off{background:#fff7ed;color:#b45309;border:1px solid #fed7aa}
+  .dot{width:9px;height:9px;border-radius:50%;background:currentColor}
+  .status a{color:inherit;font-weight:800}
+  .card{background:#fff;border-radius:18px;padding:24px;box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px}
+  .card h2{font-size:18px;margin-bottom:2px}
+  .card .step{display:inline-block;background:var(--green);color:#fff;font-size:12px;font-weight:800;padding:2px 9px;border-radius:20px;margin-right:8px}
+  .card .hint{color:var(--muted);font-size:13px;margin:4px 0 18px}
+  .sm{color:var(--muted);font-weight:600}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:560px){.grid3{grid-template-columns:1fr}}
+  label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fbfdfb}
+  input:focus,select:focus{outline:2px solid var(--green);border-color:var(--green)}
+  .labwrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+  table.lab{width:100%;border-collapse:collapse;min-width:520px}
+  table.lab th{background:#f0f7f1;color:var(--green-d);font-size:12px;font-weight:800;padding:9px;text-align:left;white-space:nowrap}
+  table.lab td{padding:5px;border-top:1px solid var(--line)}
+  table.lab td.no{text-align:center;font-weight:800;color:var(--muted);width:48px}
+  table.lab input,table.lab select{padding:8px;border-radius:8px;font-size:13px}
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:560px){.summary{grid-template-columns:repeat(2,1fr)}}
+  .sb{background:#f0f7f1;border-radius:12px;padding:14px;text-align:center}
+  .sb .t{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .sb .v{font-size:24px;font-weight:800;margin-top:3px;color:var(--green-d)}
+  .sb .u{font-size:11px;color:var(--muted)}
+  .delrow{color:#ef4444;cursor:pointer;font-weight:800;border:0;background:none;font-size:16px}
+  .save{width:100%;background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff;border:0;padding:15px;border-radius:13px;font-weight:800;cursor:pointer;font-size:16px}
+  .save:disabled{opacity:.6;cursor:wait}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .btn-out{border:1px solid var(--green);background:#fff;color:var(--green-d);padding:9px 16px;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px}
+  .tablewrap{overflow:auto}
+  table.recent{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+  table.recent th{background:#f0f7f1;text-align:left;padding:11px;font-weight:800;color:var(--green-d);white-space:nowrap}
+  table.recent td{padding:10px 11px;border-top:1px solid var(--line)}
+  .sync{font-size:11px;font-weight:800}.sync.y{color:var(--green)}.sync.n{color:#b45309}
+  .empty{padding:24px;text-align:center;color:var(--muted)}
+  .modal{position:fixed;inset:0;background:rgba(15,36,23,.5);display:none;place-items:center;padding:20px;z-index:50}
+  .modal.show{display:grid}
+  .mbox{background:#fff;border-radius:18px;padding:26px;max-width:480px;width:100%;box-shadow:var(--shadow)}
+  .mbox h3{margin-bottom:6px}.mbox p{color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.5}
+  .mbox .row{display:flex;gap:10px;margin-top:16px}
+  .mbox button{flex:1;padding:12px;border-radius:11px;font-weight:800;cursor:pointer;border:0}
+  .mbox .primary{background:var(--green);color:#fff}.mbox .ghost{background:#f1f5f4;color:var(--ink)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:#fff;padding:13px 24px;border-radius:12px;font-weight:700;box-shadow:var(--shadow);opacity:0;transition:.35s;z-index:99}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">🥥</div>
+      <div><h1>HOMWANN</h1><small>QUALITY CHECKS</small></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a class="gear" href="index.html" style="text-decoration:none">🏠 Home</a>
+      <button class="gear" onclick="openCfg()">⚙ Settings</button>
+    </div>
+  </header>
+
+  <div id="status" class="status off"><span class="dot"></span><span id="statusTxt"></span></div>
+
+  <!-- context -->
+  <div class="card">
+    <h2><span class="step">1</span>Run Info</h2>
+    <div class="hint">Pick supplier(s) — the lot number is generated automatically.</div>
+    <div class="grid3">
+      <div><label>Date</label><input type="date" id="f-date" oninput="genLot()"></div>
+      <div><label>Supplier 1</label><select id="f-sup1" onchange="genLot()"></select></div>
+      <div><label>Supplier 2 <span class="sm">(optional, for mixes)</span></label><select id="f-sup2" onchange="genLot()"></select></div>
+    </div>
+    <div style="margin-top:14px"><label>Lot Number <span class="sm">(auto)</span></label>
+      <input id="f-lot" placeholder="—" readonly style="font-weight:800;letter-spacing:1.5px;font-size:16px"></div>
+    <div id="lotHint" style="background:#f0f7f1;border-radius:10px;padding:10px 12px;font-size:12px;color:var(--green-d);font-weight:700;margin-top:10px">Lot = Supplier code(s) + Year (2-digit) + Month + Week + Day</div>
+
+    <details style="margin-top:14px">
+      <summary style="cursor:pointer;font-weight:700;font-size:13px;color:var(--green-d)">➕ Add a new supplier</summary>
+      <div class="grid3" style="margin-top:12px;align-items:end">
+        <div><label>New supplier name</label><input id="new-name" placeholder="Supplier name"></div>
+        <div><label>Code <span class="sm">(auto-suggested)</span></label><input id="new-code" placeholder="Z"></div>
+        <div><button class="btn-out" type="button" onclick="addSupplier()" style="width:100%;padding:11px">+ Add supplier</button></div>
+      </div>
+      <div class="sm" style="font-size:11px;margin-top:8px">Saved on this device. The suggested code is the next free letter — you can change it.</div>
+    </details>
+  </div>
+
+  <!-- checks -->
+  <div class="card">
+    <h2><span class="step">2</span>Quality Checks <span class="sm" style="font-weight:600">· per batch (50 L / 2 baskets)</span></h2>
+    <div class="hint">Check Brix and water taste for every batch. Add a row per batch.</div>
+    <div class="labwrap">
+      <table class="lab">
+        <thead><tr><th>Batch</th><th>Brix</th><th>Taste (water)</th><th>Odor</th><th></th></tr></thead>
+        <tbody id="qcBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px"><button class="btn-out" type="button" onclick="addCheck()">+ Add batch</button></div>
+    <div class="summary" style="margin-top:14px">
+      <div class="sb"><div class="t">Batches Checked</div><div class="v" id="q-count">0</div><div class="u">batches</div></div>
+      <div class="sb"><div class="t">Avg Brix</div><div class="v" id="q-brix">—</div><div class="u">°Bx</div></div>
+      <div class="sb"><div class="t">Common Taste</div><div class="v" id="q-taste" style="font-size:14px">—</div><div class="u">mode</div></div>
+      <div class="sb"><div class="t">Common Odor</div><div class="v" id="q-odor" style="font-size:14px">—</div><div class="u">mode</div></div>
+    </div>
+  </div>
+
+  <button class="save" id="saveBtn" onclick="submit()">Save Quality Checks to Drive</button>
+
+  <div class="toolbar">
+    <button class="btn-out" onclick="openSheet()">📄 Open Google Sheet</button>
+    <button class="btn-out" onclick="retryAll()">🔄 Retry unsynced</button>
+    <button class="btn-out" onclick="exportCSV()">⬇ Export CSV</button>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h2>Recent Checks (this device)</h2>
+    <div class="hint">Latest quality-check sessions logged here.</div>
+    <div class="tablewrap">
+      <table class="recent">
+        <thead><tr><th>Date</th><th>Supplier</th><th>Lot No.</th><th>Batches</th><th>Avg Brix</th><th>Common Taste</th><th>Common Odor</th><th>Synced</th></tr></thead>
+        <tbody id="recBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>HOMWANN Quality Checks · syncs to the Production QC tab in your Google Drive workbook</footer>
+</div>
+
+<!-- settings -->
+<div class="modal" id="cfg">
+  <div class="mbox">
+    <h3>⚙ Google Drive Connection</h3>
+    <p>Paste the <b>Web App URL</b> from the HOMWANN connector deployment. Same URL used by the other apps.</p>
+    <label>Web App URL</label>
+    <input id="cfg-url" placeholder="https://script.google.com/macros/s/..../exec">
+    <div class="row"><button class="ghost" onclick="closeCfg()">Cancel</button><button class="primary" onclick="saveCfg()">Save</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SHEET_URL="https://docs.google.com/spreadsheets/d/1OVe6ECDRn8qL2ntbSWs6QiqGHQhdeaKt7GqzS-_Y8MI/edit";
+const CFG_KEY="homwann_cfg", DATA_KEY="homwann_qc";
+const DEFAULT_URL="https://script.google.com/macros/s/AKfycbwESFOof9WyhNa-mzx3rCLL4Y9IiVaESxYH3zmpdKmassY2rvDBDylmsUTqHXSW-fcp/exec";
+let CFG=JSON.parse(localStorage.getItem(CFG_KEY)||"{}");
+if(!CFG.url){CFG.url=DEFAULT_URL;localStorage.setItem(CFG_KEY,JSON.stringify(CFG));}
+let ROWS=JSON.parse(localStorage.getItem(DATA_KEY)||"[]");
+const today=()=>new Date().toISOString().slice(0,10);
+const uid=()=>Date.now()+''+Math.floor(Math.random()*999);
+const val=id=>document.getElementById(id).value;
+const TASTE=["","1 — Very sweet","2 — Sweet","3 — Slight sour","4 — Sour","5 — No taste"];
+const ODOR=["","1 — Aromatic","2 — A little aromatic","3 — No aromatic","4 — Old coconut"];
+function optS(arr){return arr.map(v=>`<option value="${v}">${v||'—'}</option>`).join('');}
+function mode(arr){const a=arr.filter(Boolean);if(!a.length)return '';const c={};a.forEach(x=>c[x]=(c[x]||0)+1);return Object.keys(c).sort((x,y)=>c[y]-c[x])[0];}
+
+// ----- supplier codes & lot number -----
+const BASE_SUPPLIERS=[
+ {n:'Kimkee',c:'A'},{n:'เก่ง',c:'B'},{n:'Kritsana',c:'C'},{n:'TeeraPhon',c:'D'},
+ {n:'Jo',c:'E'},{n:'Phon',c:'F'},{n:'เจน',c:'G'},{n:'เดี๋ยว',c:'H'},{n:'นก',c:'I'},
+ {n:'เทพ',c:'J'},{n:'ดอน',c:'K'},{n:'อุ้ย',c:'L'},{n:'หญ๋ง',c:'M'},{n:'จี๊บ',c:'N'},
+ {n:'หยง',c:'O'},{n:'เจ๊เปิ้ล',c:'X'},{n:'แจ็ค',c:'P'},{n:'อ้อม',c:'Q'},{n:'มารวย',c:'R'},
+ {n:'เจ๊ค',c:'S'},{n:'นุ้ย',c:'T'},{n:'บังอร',c:'U'},{n:'สุธี',c:'V'},
+ {n:'สุธี (มะพร๊าวควั่นขาว)',c:'V**'},{n:'แสวง',c:'W'},{n:'โจ๊ะ',c:'Y'}
+];
+let CUSTOM=JSON.parse(localStorage.getItem('homwann_suppliers')||'[]');
+function allSuppliers(){return BASE_SUPPLIERS.concat(CUSTOM);}
+function usedCodes(){return new Set(allSuppliers().map(s=>(s.c||'').toUpperCase()));}
+function nextCode(){
+  const used=usedCodes();
+  for(let i=90;i>=65;i--){const ch=String.fromCharCode(i);if(!used.has(ch))return ch;} // Z..A, prefer Z first
+  let n=1;while(used.has('Z'+n))n++;return 'Z'+n;
+}
+function fillSuppliers(){
+  const opts=allSuppliers().map(s=>`<option value="${s.c}|${s.n}">${s.n} (${s.c})</option>`).join('');
+  document.getElementById('f-sup1').innerHTML=opts;
+  document.getElementById('f-sup2').innerHTML='<option value="">— none —</option>'+opts;
+  const nc=document.getElementById('new-code');if(nc)nc.value=nextCode();
+}
+function addSupplier(){
+  const name=document.getElementById('new-name').value.trim();
+  let code=(document.getElementById('new-code').value.trim()||nextCode()).toUpperCase();
+  if(!name)return toast('Enter the new supplier name');
+  if(usedCodes().has(code)){if(!confirm('Code "'+code+'" is already used. Add anyway?'))return;}
+  CUSTOM.push({n:name,c:code});
+  localStorage.setItem('homwann_suppliers',JSON.stringify(CUSTOM));
+  fillSuppliers();
+  document.getElementById('f-sup1').value=code+'|'+name;
+  document.getElementById('new-name').value='';
+  genLot();
+  toast('✅ Added '+name+' ('+code+')');
+}
+const pad2=n=>String(n).padStart(2,'0');
+function parseDate(s){const p=(s||'').split('-').map(Number);return (p.length===3&&p[0])?new Date(p[0],p[1]-1,p[2]):new Date();}
+function weekOfYear(d){const start=new Date(d.getFullYear(),0,1);const doy=Math.floor((d-start)/86400000)+1;return Math.ceil(doy/7);}
+function genLot(){
+  const v1=val('f-sup1'),v2=val('f-sup2');
+  const c1=v1?v1.split('|')[0]:'', c2=v2?v2.split('|')[0]:'';
+  const d=parseDate(val('f-date'));
+  const yy=String(d.getFullYear()).slice(-2);
+  const lot=(c1+c2)+yy+pad2(d.getMonth()+1)+pad2(weekOfYear(d))+pad2(d.getDate());
+  document.getElementById('f-lot').value = c1 ? lot : '—';
+  const names=[v1?v1.split('|')[1]:'',v2?v2.split('|')[1]:''].filter(Boolean).join(' + ');
+  return {lot:c1?lot:'', names};
+}
+
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2400);}
+
+function addCheck(){
+  const tb=document.getElementById('qcBody');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td class="no"></td>
+    <td><input type="number" step="0.1" min="7" value="7" class="q-brix" oninput="calc()"></td>
+    <td><select class="q-taste" onchange="calc()">${optS(TASTE)}</select></td>
+    <td><select class="q-odor" onchange="calc()">${optS(ODOR)}</select></td>
+    <td><button class="delrow" type="button" onclick="this.closest('tr').remove();calc()">×</button></td>`;
+  tb.appendChild(tr);calc();
+}
+function checks(){
+  return [...document.querySelectorAll('#qcBody tr')].map((tr,i)=>({
+    n:i+1,
+    brix:tr.querySelector('.q-brix').value,
+    taste:tr.querySelector('.q-taste').value,
+    odor:tr.querySelector('.q-odor').value
+  }));
+}
+function qcSummary(){
+  const ch=checks();
+  [...document.querySelectorAll('#qcBody tr')].forEach((tr,i)=>tr.querySelector('.no').textContent=i+1);
+  const bx=ch.map(c=>+c.brix).filter(v=>v>0);
+  const avgBrix=bx.length?Math.round(bx.reduce((a,b)=>a+b,0)/bx.length*10)/10:'';
+  return{ch,count:ch.length,avgBrix,commonTaste:mode(ch.map(c=>c.taste)),commonOdor:mode(ch.map(c=>c.odor))};
+}
+function calc(){
+  const q=qcSummary();
+  document.getElementById('q-count').textContent=q.count;
+  document.getElementById('q-brix').textContent=q.avgBrix!==''?q.avgBrix:'—';
+  document.getElementById('q-taste').textContent=q.commonTaste||'—';
+  document.getElementById('q-odor').textContent=q.commonOdor||'—';
+}
+
+function status(){
+  const el=document.getElementById('status'),tx=document.getElementById('statusTxt');
+  if(CFG.url){el.className='status ok';tx.innerHTML='Connected to Google Drive — entries sync automatically.';}
+  else{el.className='status off';tx.innerHTML='Not connected yet. <a href="#" onclick="openCfg();return false">Add your Web App URL</a> to sync to Drive.';}
+}
+function openCfg(){document.getElementById('cfg-url').value=CFG.url||'';document.getElementById('cfg').classList.add('show');}
+function closeCfg(){document.getElementById('cfg').classList.remove('show');}
+function saveCfg(){CFG.url=val('cfg-url').trim();localStorage.setItem(CFG_KEY,JSON.stringify(CFG));closeCfg();status();toast('✅ Connection saved');}
+function openSheet(){window.open(SHEET_URL,'_blank');}
+
+async function submit(){
+  const q=qcSummary();
+  const valid=q.ch.filter(c=>c.taste||c.odor||(+c.brix>0));
+  if(!valid.length)return toast('Fill at least one batch check');
+  const g=genLot();
+  if(!g.lot)return toast('Pick Supplier 1');
+  const rec={
+    id:uid(),type:'qc',
+    date:val('f-date')||today(),supplier:g.names,ref:g.lot,
+    count:valid.length,avgBrix:q.avgBrix,commonTaste:q.commonTaste,commonOdor:q.commonOdor,
+    checks:valid,synced:false
+  };
+  ROWS.unshift(rec);persist();render();
+  await sync(rec);
+  if(rec.synced){
+    document.getElementById('qcBody').innerHTML='';addCheck();
+  }
+}
+async function sync(rec){
+  if(!CFG.url){toast('💾 Saved locally — connect Drive to sync');return;}
+  const btn=document.getElementById('saveBtn');btn.disabled=true;
+  try{
+    await fetch(CFG.url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(rec)});
+    rec.synced=true;persist();render();toast('✅ Saved to Google Drive');
+  }catch(e){toast('⚠ Saved locally — sync failed, will retry');}
+  btn.disabled=false;
+}
+async function retryAll(){
+  const pend=ROWS.filter(r=>!r.synced);
+  if(!pend.length)return toast('Nothing to retry');
+  if(!CFG.url)return openCfg();
+  for(const r of pend){await sync(r);}
+}
+
+function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(ROWS));}
+function render(){
+  const b=document.getElementById('recBody');
+  if(!ROWS.length){b.innerHTML='<tr><td colspan="8" class="empty">No quality checks yet.</td></tr>';return;}
+  b.innerHTML=ROWS.slice(0,30).map(r=>{
+    const s=r.synced?'<span class="sync y">✓ synced</span>':'<span class="sync n">⏳ local</span>';
+    return `<tr><td>${r.date}</td><td>${r.supplier||'—'}</td><td>${r.ref||'—'}</td><td>${r.count}</td><td>${r.avgBrix!==''?r.avgBrix:'—'}</td><td>${r.commonTaste||'—'}</td><td>${r.commonOdor||'—'}</td><td>${s}</td></tr>`;
+  }).join('');
+}
+function exportCSV(){
+  let csv='Date,Supplier,Lot No,Batch No,Brix,Taste(water),Odor,Avg Brix,Common Taste,Common Odor\n';
+  ROWS.forEach(r=>r.checks.forEach(c=>csv+=`${r.date},${r.supplier},${r.ref},${c.n},${c.brix},${c.taste},${c.odor},${r.avgBrix},${r.commonTaste},${r.commonOdor}\n`));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='homwann_qc_'+today()+'.csv';a.click();toast('⬇ CSV downloaded');
+}
+
+// init
+fillSuppliers();
+document.getElementById('f-date').value=today();
+genLot();
+addCheck();
+status();render();calc();
+</script>
+</body>
+</html>
