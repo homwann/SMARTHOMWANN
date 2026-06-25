@@ -157,7 +157,7 @@ const CFG_KEY="homwann_cfg", DATA_KEY="homwann_purchase";
 let CFG=JSON.parse(localStorage.getItem(CFG_KEY)||"{}");
 let ROWS=JSON.parse(localStorage.getItem(DATA_KEY)||"[]");
 const SMELL=["","Aromatic","A little aromatic","No aromatic","Old coconut"];
-const FLAVOR=["","Very sweet","Sweet","Slight sour","Sour","No taste"];
+const FLAVOR=["","less Sweet","Very sweet","Sweet","Slight sour","Sour","No taste"];
 const LAYER=["","1.0","1.5","1.8","2.0","More than 2.0"];
 const today=()=>new Date().toISOString().slice(0,10);
 const uid=()=>Date.now()+''+Math.floor(Math.random()*999);
