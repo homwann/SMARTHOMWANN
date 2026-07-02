@@ -169,7 +169,7 @@
     <div class="hint">Latest batches logged here.</div>
     <div class="tablewrap">
       <table class="recent">
-        <thead><tr><th>Date</th><th>Supplier</th><th>Size</th><th>Qty</th><th>Meat (kg)</th><th>Water (L)</th><th>Meat Y%</th><th>Water Y%</th><th>Good Rate</th><th>Synced</th></tr></thead>
+        <thead><tr><th>Date</th><th>Supplier</th><th>Size</th><th>Qty</th><th>Meat (kg)</th><th>Water (L)</th><th>Meat Y%</th><th>Water Y%</th><th>Good Rate</th><th>Synced</th><th>Edit</th></tr></thead>
         <tbody id="recBody"></tbody>
       </table>
     </div>
@@ -393,12 +393,19 @@ async function retryAll(){
 function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(ROWS));}
 function render(){
   const b=document.getElementById('recBody');
-  if(!ROWS.length){b.innerHTML='<tr><td colspan="10" class="empty">No production records yet.</td></tr>';return;}
+  if(!ROWS.length){b.innerHTML='<tr><td colspan="11" class="empty">No production records yet.</td></tr>';return;}
   const pct=v=>(v!==''&&v!=null)?v+'%':'—';
-  b.innerHTML=ROWS.slice(0,30).map(r=>{
+  b.innerHTML=ROWS.slice(0,30).map((r,i)=>{
     const s=r.synced?'<span class="sync y">✓ synced</span>':'<span class="sync n">⏳ local</span>';
-    return `<tr><td>${r.date}</td><td>${r.supplier}</td><td>${r.size||'—'}</td><td>${r.quantity||'—'}</td><td>${r.meat||'—'}</td><td>${r.water||'—'}</td><td>${pct(r.meatYield)}</td><td>${pct(r.waterYield)}</td><td>${pct(r.goodRate)}</td><td>${s}</td></tr>`;
+    return `<tr><td>${r.date}</td><td>${r.supplier}</td><td>${r.size||'—'}</td><td>${r.quantity||'—'}</td><td>${r.meat||'—'}</td><td>${r.water||'—'}</td><td>${pct(r.meatYield)}</td><td>${pct(r.waterYield)}</td><td>${pct(r.goodRate)}</td><td>${s}</td><td><button onclick="delEntry(${i})" title="Delete" style="color:#ef4444;border:0;background:none;cursor:pointer;font-weight:800;font-size:16px">×</button></td></tr>`;
   }).join('');
+}
+function delEntry(i){
+  const rec=ROWS[i];if(!rec)return;
+  if(!confirm('Delete this production run? It will be removed here and from the Google Sheet (Production, QC, Output).'))return;
+  ROWS.splice(i,1);persist();render();
+  if(CFG.url && rec.synced){fetch(CFG.url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'delete',section:'production',id:rec.id})}).catch(()=>{});}
+  toast('Deleted — then re-enter it correctly');
 }
 function exportCSV(){
   let csv='Date,Supplier,Size,Quantity,Avg Weight(kg),Meat Output(kg),Water Output(L),Meat Yield %,Water Yield %,Good Coconut,Not-good Coconut,Good Rate %,Waste(kg)\n';

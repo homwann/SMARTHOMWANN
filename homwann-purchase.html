@@ -91,7 +91,15 @@
       <div><label>Supplier Name</label><input id="p-sup" placeholder="Supplier"></div>
       <div><label>Delivery Date</label><input type="date" id="p-date"></div>
       <div><label>Quantity</label><input id="p-qty" placeholder="e.g. 5,000 nuts"></div>
-      <div><label>Size</label><select id="p-size"><option>Small</option><option selected>Medium</option><option>Large</option><option>Jumbo</option><option>Mixed</option></select></div>
+      <div><label>Size <span style="color:#64748b;font-weight:600">(auto from avg weight)</span></label>
+        <select id="p-size" onchange="this.dataset.manual='1'">
+          <option value="">—</option>
+          <option value="5 — Small">5 — Small (&lt;1.3 kg)</option>
+          <option value="4 — Medium">4 — Medium (&lt;1.5 kg)</option>
+          <option value="3 — Medium large">3 — Medium large (&gt;1.5 kg)</option>
+          <option value="2 — Large">2 — Large (&gt;1.7 kg)</option>
+          <option value="1 — Jumbo">1 — Jumbo (&gt;2 kg)</option>
+        </select></div>
       <div><label>Taste (overall)</label><select id="p-taste">
         <option>Aromatic</option><option>A little aromatic</option><option>No aromatic</option><option>Old coconut</option></select></div>
       <div><label>Recorded By</label><input id="p-by" placeholder="Your name"></div>
@@ -100,18 +108,19 @@
 
   <!-- lab report -->
   <div class="card">
-    <h2><span class="step">2</span>Lab Report — 10 Samples</h2>
-    <div class="hint">Measure each sample. Averages update automatically.</div>
+    <h2><span class="step">2</span>Lab Report — Samples</h2>
+    <div class="hint">Measure each sample (starts with 10). Add or remove rows as needed. Averages update automatically.</div>
     <div class="labwrap">
       <table class="lab">
         <thead><tr>
-          <th>#</th><th>Smell</th><th>Flavor</th><th>% Brix</th><th>Weight (kg)</th><th>Water (ml)</th><th>Meat (kg)</th><th>Meat Layer</th>
+          <th>#</th><th>Smell</th><th>Flavor</th><th>% Brix</th><th>Weight (kg)</th><th>Water (ml)</th><th>Meat (kg)</th><th>Meat Layer</th><th></th>
         </tr></thead>
         <tbody id="labBody"></tbody>
       </table>
     </div>
+    <div style="margin-top:12px"><button class="btn-out" type="button" onclick="addSample()">+ Add sample</button></div>
     <div class="summary">
-      <div class="sb"><div class="t">Samples Filled</div><div class="v" id="s-count">0</div><div class="u">/ 10</div></div>
+      <div class="sb"><div class="t">Samples Filled</div><div class="v" id="s-count">0</div><div class="u">samples</div></div>
       <div class="sb"><div class="t">Avg Weight</div><div class="v" id="s-wt">0</div><div class="u">kg / nut</div></div>
       <div class="sb"><div class="t">Avg Water</div><div class="v" id="s-water">0</div><div class="u">ml / nut</div></div>
       <div class="sb"><div class="t">Avg Meat</div><div class="v" id="s-meat">0</div><div class="u">kg / nut</div></div>
@@ -133,7 +142,7 @@
     <div class="hint">Latest purchase records logged here.</div>
     <div class="tablewrap">
       <table class="recent">
-        <thead><tr><th>Date</th><th>Supplier</th><th>Qty</th><th>Size</th><th>Taste</th><th>Avg Wt</th><th>Avg Water</th><th>Avg Meat</th><th>Avg Bx</th><th>Synced</th></tr></thead>
+        <thead><tr><th>Date</th><th>Supplier</th><th>Qty</th><th>Size</th><th>Taste</th><th>Avg Wt</th><th>Avg Water</th><th>Avg Meat</th><th>Avg Bx</th><th>Synced</th><th>Edit</th></tr></thead>
         <tbody id="recBody"></tbody>
       </table>
     </div>
@@ -162,7 +171,7 @@ let CFG=JSON.parse(localStorage.getItem(CFG_KEY)||"{}");
 if(!CFG.url){CFG.url=DEFAULT_URL;localStorage.setItem(CFG_KEY,JSON.stringify(CFG));}
 let ROWS=JSON.parse(localStorage.getItem(DATA_KEY)||"[]");
 const SMELL=["","Aromatic","A little aromatic","No aromatic","Old coconut"];
-const FLAVOR=["","Very sweet","Sweet","Slight sour","Sour","less sweet","No taste"];
+const FLAVOR=["","Very sweet","Sweet","Slight sour","Sour","No taste"];
 const LAYER=["","1.0","1.5","1.8","2.0","More than 2.0"];
 const today=()=>new Date().toISOString().slice(0,10);
 const uid=()=>Date.now()+''+Math.floor(Math.random()*999);
@@ -171,11 +180,8 @@ let tT;function toast(m){const t=document.getElementById('toast');t.textContent=
 
 // build 10 sample rows
 function opt(arr){return arr.map(v=>`<option value="${v}">${v||'—'}</option>`).join('');}
-function buildLab(){
-  let h='';
-  for(let i=1;i<=10;i++){
-    h+=`<tr>
-      <td class="no">${i}</td>
+function sampleRowHTML(){
+  return `<td class="no"></td>
       <td><select class="x-smell">${opt(SMELL)}</select></td>
       <td><select class="x-flavor">${opt(FLAVOR)}</select></td>
       <td><input type="number" step="0.1" min="7" value="7" class="x-brix" oninput="calc()"></td>
@@ -183,9 +189,18 @@ function buildLab(){
       <td><input type="number" step="1" class="x-water" oninput="calc()"></td>
       <td><input type="number" step="0.01" class="x-meat" oninput="calc()"></td>
       <td><select class="x-layer">${opt(LAYER)}</select></td>
-    </tr>`;
-  }
-  document.getElementById('labBody').innerHTML=h;
+      <td><button type="button" onclick="this.closest('tr').remove();renumberSamples();calc()" title="Remove sample" style="color:#ef4444;border:0;background:none;cursor:pointer;font-weight:800;font-size:16px">×</button></td>`;
+}
+function addSample(){
+  const tr=document.createElement('tr');
+  tr.innerHTML=sampleRowHTML();
+  document.getElementById('labBody').appendChild(tr);
+  renumberSamples();
+}
+function renumberSamples(){[...document.querySelectorAll('#labBody tr')].forEach((tr,i)=>tr.querySelector('.no').textContent=i+1);}
+function buildLab(){
+  document.getElementById('labBody').innerHTML='';
+  for(let i=0;i<10;i++)addSample();
 }
 function samples(){
   const tr=[...document.querySelectorAll('#labBody tr')];
@@ -211,6 +226,11 @@ function calc(){
   const brx=filledRows.map(x=>+x.brix).filter(v=>v>0);
   const avg=(a,d)=>{if(!a.length)return 0;const f=Math.pow(10,d);return Math.round(a.reduce((p,c)=>p+c,0)/a.length*f)/f;};
   const avgWt=avg(wts,2), avgWater=avg(wat,0), avgMeat=avg(met,2), avgBrix=avg(brx,1);
+  // auto-suggest coconut size from average sample weight (unless manually set)
+  const szEl=document.getElementById('p-size');
+  if(avgWt>0 && szEl.dataset.manual!=='1'){
+    szEl.value = avgWt<1.3?'5 — Small': avgWt<1.5?'4 — Medium': avgWt<=1.7?'3 — Medium large': avgWt<=2?'2 — Large':'1 — Jumbo';
+  }
   document.getElementById('s-count').textContent=filled;
   document.getElementById('s-wt').textContent=avgWt;
   document.getElementById('s-water').textContent=avgWater;
@@ -251,6 +271,7 @@ async function submit(){
   await sync(rec);
   if(rec.synced){ // reset form for next delivery
     ['p-sup','p-qty','p-by'].forEach(i=>document.getElementById(i).value='');
+    {const sz=document.getElementById('p-size');sz.value='';sz.dataset.manual='';}
     buildLab();calc();
   }
 }
@@ -273,11 +294,18 @@ async function retryAll(){
 function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(ROWS));}
 function render(){
   const b=document.getElementById('recBody');
-  if(!ROWS.length){b.innerHTML='<tr><td colspan="10" class="empty">No deliveries yet.</td></tr>';return;}
-  b.innerHTML=ROWS.slice(0,30).map(r=>{
+  if(!ROWS.length){b.innerHTML='<tr><td colspan="11" class="empty">No deliveries yet.</td></tr>';return;}
+  b.innerHTML=ROWS.slice(0,30).map((r,i)=>{
     const s=r.synced?'<span class="sync y">✓ synced</span>':'<span class="sync n">⏳ local</span>';
-    return `<tr><td>${r.date}</td><td>${r.supplier}</td><td>${r.quantity||'—'}</td><td>${r.size}</td><td>${r.taste}</td><td>${r.avgWt} kg</td><td>${r.avgWater} ml</td><td>${r.avgMeat} kg</td><td>${r.avgBrix}</td><td>${s}</td></tr>`;
+    return `<tr><td>${r.date}</td><td>${r.supplier}</td><td>${r.quantity||'—'}</td><td>${r.size}</td><td>${r.taste}</td><td>${r.avgWt} kg</td><td>${r.avgWater} ml</td><td>${r.avgMeat} kg</td><td>${r.avgBrix}</td><td>${s}</td><td><button onclick="delEntry(${i})" title="Delete" style="color:#ef4444;border:0;background:none;cursor:pointer;font-weight:800;font-size:16px">×</button></td></tr>`;
   }).join('');
+}
+function delEntry(i){
+  const rec=ROWS[i];if(!rec)return;
+  if(!confirm('Delete this delivery? It will be removed here and from the Google Sheet (Purchase + Lab Report).'))return;
+  ROWS.splice(i,1);persist();render();
+  if(CFG.url && rec.synced){fetch(CFG.url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'delete',section:'purchase',id:rec.id})}).catch(()=>{});}
+  toast('Deleted — then re-enter it correctly');
 }
 function exportCSV(){
   let csv='Delivery Date,Supplier,Quantity,Size,Taste,Sample No,Smell,Flavor,%Brix,Weight(kg),Water(ml),Meat(kg),Meat Layer,Avg Weight(kg),Avg Water(ml),Avg Meat(kg),Avg Brix\n';

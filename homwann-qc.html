@@ -109,15 +109,15 @@
 
   <!-- checks -->
   <div class="card">
-    <h2><span class="step">2</span>Quality Checks <span class="sm" style="font-weight:600">· per batch (50 L / 2 baskets)</span></h2>
-    <div class="hint">Check Brix and water taste for every batch. Add a row per batch.</div>
+    <h2><span class="step">2</span>Quality Checks <span class="sm" style="font-weight:600">· per basket (1 full freezer basket)</span></h2>
+    <div class="hint">Check Brix and water taste for every full basket. Pick the container — units per basket fill in automatically. Add a row per basket.</div>
     <div class="labwrap">
       <table class="lab">
-        <thead><tr><th>Batch</th><th>Brix</th><th>Taste (water)</th><th>Odor</th><th></th></tr></thead>
+        <thead><tr><th>Basket</th><th>Container</th><th>Units/Basket</th><th>Brix</th><th>Taste (water)</th><th>Odor</th><th></th></tr></thead>
         <tbody id="qcBody"></tbody>
       </table>
     </div>
-    <div style="margin-top:12px"><button class="btn-out" type="button" onclick="addCheck()">+ Add batch</button></div>
+    <div style="margin-top:12px"><button class="btn-out" type="button" onclick="addCheck()">+ Add basket</button></div>
     <div class="summary" style="margin-top:14px">
       <div class="sb"><div class="t">Batches Checked</div><div class="v" id="q-count">0</div><div class="u">batches</div></div>
       <div class="sb"><div class="t">Avg Brix</div><div class="v" id="q-brix">—</div><div class="u">°Bx</div></div>
@@ -139,7 +139,7 @@
     <div class="hint">Latest quality-check sessions logged here.</div>
     <div class="tablewrap">
       <table class="recent">
-        <thead><tr><th>Date</th><th>Supplier</th><th>Lot No.</th><th>Batches</th><th>Avg Brix</th><th>Common Taste</th><th>Common Odor</th><th>Synced</th></tr></thead>
+        <thead><tr><th>Date</th><th>Supplier</th><th>Lot No.</th><th>Batches</th><th>Avg Brix</th><th>Common Taste</th><th>Common Odor</th><th>Synced</th><th>Edit</th></tr></thead>
         <tbody id="recBody"></tbody>
       </table>
     </div>
@@ -174,6 +174,16 @@ const TASTE=["","1 — Very sweet","2 — Sweet","3 — Slight sour","4 — Sour
 const ODOR=["","1 — Aromatic","2 — A little aromatic","3 — No aromatic","4 — Old coconut"];
 function optS(arr){return arr.map(v=>`<option value="${v}">${v||'—'}</option>`).join('');}
 function mode(arr){const a=arr.filter(Boolean);if(!a.length)return '';const c={};a.forEach(x=>c[x]=(c[x]||0)+1);return Object.keys(c).sort((x,y)=>c[y]-c[x])[0];}
+
+// container types and how many fit in one freezer basket
+const CONTAINERS=[
+ {v:'1L bottle',per:24,note:'24 bottles = 24 L'},
+ {v:'OEM 200ml bottle',per:144,note:'144 bottles'},
+ {v:'HOMWANN 200ml bottle',per:136,note:'136 bottles'},
+ {v:'CAN 220ml',per:80,note:'80 cans'}
+];
+const CONTPER={};CONTAINERS.forEach(c=>CONTPER[c.v]=c.per);
+function contOptions(){return '<option value="">—</option>'+CONTAINERS.map(c=>`<option value="${c.v}">${c.v} (${c.per}/basket)</option>`).join('');}
 
 // ----- supplier codes & lot number -----
 const BASE_SUPPLIERS=[
@@ -231,15 +241,20 @@ function addCheck(){
   const tb=document.getElementById('qcBody');
   const tr=document.createElement('tr');
   tr.innerHTML=`<td class="no"></td>
+    <td><select class="q-cont" onchange="contFill(this)">${contOptions()}</select></td>
+    <td><input class="q-per" readonly placeholder="—" style="width:80px"></td>
     <td><input type="number" step="0.1" min="7" value="7" class="q-brix" oninput="calc()"></td>
     <td><select class="q-taste" onchange="calc()">${optS(TASTE)}</select></td>
     <td><select class="q-odor" onchange="calc()">${optS(ODOR)}</select></td>
     <td><button class="delrow" type="button" onclick="this.closest('tr').remove();calc()">×</button></td>`;
   tb.appendChild(tr);calc();
 }
+function contFill(sel){sel.closest('tr').querySelector('.q-per').value=CONTPER[sel.value]||'';}
 function checks(){
   return [...document.querySelectorAll('#qcBody tr')].map((tr,i)=>({
     n:i+1,
+    container:tr.querySelector('.q-cont').value,
+    perBasket:CONTPER[tr.querySelector('.q-cont').value]||'',
     brix:tr.querySelector('.q-brix').value,
     taste:tr.querySelector('.q-taste').value,
     odor:tr.querySelector('.q-odor').value
@@ -307,15 +322,22 @@ async function retryAll(){
 function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(ROWS));}
 function render(){
   const b=document.getElementById('recBody');
-  if(!ROWS.length){b.innerHTML='<tr><td colspan="8" class="empty">No quality checks yet.</td></tr>';return;}
-  b.innerHTML=ROWS.slice(0,30).map(r=>{
+  if(!ROWS.length){b.innerHTML='<tr><td colspan="9" class="empty">No quality checks yet.</td></tr>';return;}
+  b.innerHTML=ROWS.slice(0,30).map((r,i)=>{
     const s=r.synced?'<span class="sync y">✓ synced</span>':'<span class="sync n">⏳ local</span>';
-    return `<tr><td>${r.date}</td><td>${r.supplier||'—'}</td><td>${r.ref||'—'}</td><td>${r.count}</td><td>${r.avgBrix!==''?r.avgBrix:'—'}</td><td>${r.commonTaste||'—'}</td><td>${r.commonOdor||'—'}</td><td>${s}</td></tr>`;
+    return `<tr><td>${r.date}</td><td>${r.supplier||'—'}</td><td>${r.ref||'—'}</td><td>${r.count}</td><td>${r.avgBrix!==''?r.avgBrix:'—'}</td><td>${r.commonTaste||'—'}</td><td>${r.commonOdor||'—'}</td><td>${s}</td><td><button onclick="delEntry(${i})" title="Delete" style="color:#ef4444;border:0;background:none;cursor:pointer;font-weight:800;font-size:16px">×</button></td></tr>`;
   }).join('');
 }
+function delEntry(i){
+  const rec=ROWS[i];if(!rec)return;
+  if(!confirm('Delete this quality-check set? It will be removed here and from the Google Sheet (Production QC).'))return;
+  ROWS.splice(i,1);persist();render();
+  if(CFG.url && rec.synced){fetch(CFG.url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'delete',section:'qc',id:rec.ref})}).catch(()=>{});}
+  toast('Deleted — then re-enter it correctly');
+}
 function exportCSV(){
-  let csv='Date,Supplier,Lot No,Batch No,Brix,Taste(water),Odor,Avg Brix,Common Taste,Common Odor\n';
-  ROWS.forEach(r=>r.checks.forEach(c=>csv+=`${r.date},${r.supplier},${r.ref},${c.n},${c.brix},${c.taste},${c.odor},${r.avgBrix},${r.commonTaste},${r.commonOdor}\n`));
+  let csv='Date,Supplier,Lot No,Basket No,Container,Units/Basket,Brix,Taste(water),Odor,Avg Brix,Common Taste,Common Odor\n';
+  ROWS.forEach(r=>r.checks.forEach(c=>csv+=`${r.date},${r.supplier},${r.ref},${c.n},${c.container||''},${c.perBasket||''},${c.brix},${c.taste},${c.odor},${r.avgBrix},${r.commonTaste},${r.commonOdor}\n`));
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download='homwann_qc_'+today()+'.csv';a.click();toast('⬇ CSV downloaded');
 }
